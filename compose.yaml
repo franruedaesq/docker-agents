@@ -9,6 +9,7 @@ services: # docker compose expects services
     environment:
       - PORT=8000
       - MY_PROJECT=Docker and Agents
+      - PYTHONPATH=/app
     env_file:
       - .env.sample
     volumes:
