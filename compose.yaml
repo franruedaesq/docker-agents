@@ -13,6 +13,9 @@ services: # docker compose expects services
       - .env.sample
     volumes:
       - ./backend/src:/app
+    depends_on:
+      - db_service
+    restart: on-failure
     develop:
       watch:
         - action: rebuild
@@ -22,19 +25,34 @@ services: # docker compose expects services
         - action: restart
           path: backend/src/
           # target: /app
-  static_html: # custom key name, we could use any name like my_app
-    # image: python:latest
-    build:
-      context: ./static_html
-      dockerfile: static.Dockerfile
+    # DATABASE_URL=postgresql+psycopg://db-user:db-password@db_service:5432/my_db
+  db_service:
+    image: postgres:17.5
     ports:
-      - 8000:8000
-      - 3000:8000
-    command: python -m http.server 8000
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=db-user
+      - POSTGRES_PASSWORD=db-password
+      - POSTGRES_DB=my_db
+      # env_file:
+      #   - .env.sample-db
     volumes:
-      - ./static_html/src:/app
+      - dc_managed_db_data:/var/lib/postgresql/data
+  # static_html: # custom key name, we could use any name like my_app
+  #   # image: python:latest
+  #   build:
+  #     context: ./static_html
+  #     dockerfile: static.Dockerfile
+  #   ports:
+  #     - 8000:8000
+  #     - 3000:8000
+  #   command: python -m http.server 8000
+  #   volumes:
+  #     - ./static_html/src:/app
 
-
+volumes: # docker compose expects volumes
+  dc_managed_db_data: # custom key name, we could use any name like my_app_data
+    driver: local
 
 # docker compose up -d
 # docker compose down
