@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends
 from typing import List
+
+from api.ai.schemas import EmailMessageSchema
+from api.ai.services import generate_email_message
 from .models import ChatMessagePayload, ChatMessage, ChatMessageListItem
 from api.db import get_session
 from sqlmodel import Session, select
@@ -19,7 +22,9 @@ def chat_list_messages(session: Session = Depends(get_session)):
 
 # HTTP POST => payload = {"message" : "Hello World"} => {"message": "Hello World", id: 1}
 # curl -X POST -d '{"message": "Hello World"}' http://localhost:8080/api/chats/ -H "Content-Type: application/json"
-@router.post('/', response_model=ChatMessage)
+# curl -X POST -d '{"message": "Hello World"}' -H "Content-Type: application/json" https://hammerhead-app-jw7do.ondigitalocean.app/api/chats/
+# curl -X POST -d '{"message": "Explainme 4 benefits of Docker"}' http://localhost:8080/api/chats/ -H "Content-Type: application/json"
+@router.post('/', response_model=EmailMessageSchema) 
 def chat_create_message(
     payload: ChatMessagePayload,
     session: Session = Depends(get_session)
@@ -33,6 +38,6 @@ def chat_create_message(
     # ready to store in the database
     session.add(obj)
     session.commit()
-    session.refresh(obj)  # refresh the object to get the id and other fields populated
-
-    return obj
+    # session.refresh(obj)  # refresh the object to get the id and other fields populated
+    response = generate_email_message(payload.message)  # Call the function to generate email message
+    return response
